@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="EMAILER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs\emailer.log</file>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <FileNamePattern>logs\emailer_%i.log.zip</FileNamePattern>
+            <MinIndex>1</MinIndex>
+            <MaxIndex>10</MaxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>2MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <logger name="com.covain.projects.emailer" level="DEBUG">
+        <appender-ref ref="EMAILER"/>
+    </logger>
+</configuration>
