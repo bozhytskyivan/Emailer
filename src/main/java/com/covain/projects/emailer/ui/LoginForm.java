@@ -1,5 +1,6 @@
 package com.covain.projects.emailer.ui;
 
+import com.covain.projects.emailer.ssl.SendMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,16 +16,16 @@ public class LoginForm extends JFrame {
     private JButton loginButton;
     private JPasswordField passwordTextField;
     private JPanel basePanel;
-    private JLabel emailLabel;
-    private JLabel passwordLabel;
-
-    private MainForm mainForm;
 
     public LoginForm() {
         super("EmailSender");
         LOG.info("Entered LoginForm");
-        System.out.println(LOG.isDebugEnabled());
-        mainForm = new MainForm(this);
+        init();
+        setVisible(true);
+    }
+
+    private void init() {
+        MainForm mainForm = new MainForm(this);
         setContentPane(basePanel);
         pack();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -32,18 +33,22 @@ public class LoginForm extends JFrame {
         setResizable(false);
 
         setDefaultLookAndFeelDecorated(true);
-        loginButton.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                if (passwordTextField.getPassword().length == 0) {
-                    new ExceptionDialog(LoginForm.this, "Password must be filled");
-                    return;
-                }
-                mainForm.setCredentials(emailTextField.getText(), passwordTextField.getPassword());
-                mainForm.setVisible(true);
-                setVisible(false);
+        loginButton.addActionListener(e -> {
+            if (passwordTextField.getPassword().length == 0
+                    || emailTextField.getText().length() == 0) {
+                new ExceptionDialog(LoginForm.this, "All fields must be filled!");
+                return;
             }
+            System.out.println("username: " + emailTextField.getText());
+            System.out.println("password: " + String.valueOf(passwordTextField.getPassword()));
+            if (!SendMessageService
+                    .getNewService(emailTextField.getText(), String.valueOf(passwordTextField.getPassword()))
+                    .authenticate()) {
+                new ExceptionDialog(LoginForm.this, "Some entered user data is wrong");
+                return;
+            }
+            mainForm.setVisible(true);
+            setVisible(false);
         });
-        setVisible(true);
     }
 }
