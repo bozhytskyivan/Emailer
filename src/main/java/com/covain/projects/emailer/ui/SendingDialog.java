@@ -5,20 +5,24 @@ import com.covain.projects.emailer.ssl.SendMessageService;
 
 import javax.mail.MessagingException;
 import javax.swing.*;
+import java.awt.event.WindowEvent;
 
-public class SendingDialog extends JDialog {
+public class SendingDialog extends AbstractDialog {
 
     private JButton cancelButton;
-    private String text = "Original text";
+    private JFrame owner;
     private boolean continueSending;
 
 
     public SendingDialog(JFrame owner) {
-        super(owner);
+        super(owner, "");
+        this.owner = owner;
+
         init();
     }
 
     private void init() {
+        addWindowListener(this);
         setSize(300, 300);
         setResizable(false);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -33,7 +37,7 @@ public class SendingDialog extends JDialog {
         add(cancelButton);
     }
 
-    public void start(Message message) {
+    public synchronized void start(Message message) {
         setVisible(true);
         continueSending = true;
         new Sender(message).start();
@@ -41,6 +45,25 @@ public class SendingDialog extends JDialog {
 
     private synchronized void stop() {
         continueSending = false;
+    }
+
+    @Override
+    public void windowOpened(WindowEvent e) {}
+
+    @Override
+    public void windowClosing(WindowEvent e) {
+        enableOwner();
+    }
+
+    @Override
+    public void windowClosed(WindowEvent e) {
+        enableOwner();
+    }
+
+    private void enableOwner() {
+        if (!owner.isEnabled()) {
+            owner.setEnabled(true);
+        }
     }
 
     class Sender extends Thread {
@@ -55,13 +78,13 @@ public class SendingDialog extends JDialog {
             for (String recipient : message.getRecipients()) {
                 System.out.println("continueSending = " + continueSending);
                 if (continueSending) {
-                    try {
+//                    try {
                         System.out.println("Sending message to: " + recipient);
-                        SendMessageService.getService().send(message.getSubject(), message.getBody(), recipient, message.getAttachments());
+                        //SendMessageService.getService().send(message.getSubject(), message.getBody(), recipient, message.getAttachments());
                         System.out.println("message to " + recipient + " successfully sent.");
-                    } catch (MessagingException e) {
-                        e.printStackTrace();
-                    }
+//                    } catch (MessagingException e) {
+//                        e.printStackTrace();
+//                    }
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {
@@ -71,4 +94,5 @@ public class SendingDialog extends JDialog {
             }
         }
     }
+
 }

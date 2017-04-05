@@ -1,22 +1,12 @@
 package com.covain.projects.emailer.ui;
 
 import com.covain.projects.emailer.pojo.Message;
-import com.covain.projects.emailer.ssl.SendMessageService;
-import com.covain.projects.emailer.utils.MailParser;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
 
-import javax.mail.MessagingException;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class MainForm extends JFrame {
 
@@ -33,7 +23,7 @@ public class MainForm extends JFrame {
     private JFileChooser fileChooser = new JFileChooser();
 
     public MainForm(LoginForm loginForm) {
-        super("EmailSender");
+        super("Emailer");
 
         this.loginForm = loginForm;
         init();
@@ -52,7 +42,7 @@ public class MainForm extends JFrame {
     }
 
     private void sendMessages() {
-//        setEnabled(false);
+        setEnabled(false);
         new SendingDialog(this).start(new Message(subject.getText(), emailBody.getText(), Arrays.asList(filePath.getText()), recipients.getText()));
     }
 

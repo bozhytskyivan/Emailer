@@ -2,12 +2,9 @@ package com.covain.projects.emailer.ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 
-public class ExceptionDialog extends JDialog implements WindowListener {
+public class ExceptionDialog extends AbstractDialog {
 
     private JFrame owner;
     private JLabel messageLabel;
@@ -15,12 +12,16 @@ public class ExceptionDialog extends JDialog implements WindowListener {
 
     private String message;
 
-    public ExceptionDialog(JFrame owner, String message) {
-        super(owner);
+    private ExceptionDialog(JFrame owner, String message) {
+        super(owner, "Emailer: me");
         this.owner = owner;
         this.message = message;
 
         init();
+    }
+
+    public static ExceptionDialog createNew(JFrame owner, String message) {
+        return new ExceptionDialog(owner, message);
     }
 
     private void init() {
@@ -30,19 +31,13 @@ public class ExceptionDialog extends JDialog implements WindowListener {
         messageLabel = new JLabel(message);
         okButton = new JButton("Ok");
         okButton.setSize(100, 50);
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        });
+        okButton.addActionListener(e -> dispose());
         setLayout(new GridLayout(4, 1));
         add(messageLabel);
         add(new JLabel());
         add(okButton);
         setSize(400, 200);
         setResizable(false);
-        setVisible(true);
     }
 
     @Override
@@ -67,23 +62,8 @@ public class ExceptionDialog extends JDialog implements WindowListener {
         }
     }
 
-    @Override
-    public void windowIconified(WindowEvent e) {
-        System.out.println("Window iconified");
+    public void display() {
+        setVisible(true);
     }
 
-    @Override
-    public void windowDeiconified(WindowEvent e) {
-        System.out.println("window deiconified");
-    }
-
-    @Override
-    public void windowActivated(WindowEvent e) {
-        System.out.println("window activated");
-    }
-
-    @Override
-    public void windowDeactivated(WindowEvent e) {
-        System.out.println("window deactivated");
-    }
 }
