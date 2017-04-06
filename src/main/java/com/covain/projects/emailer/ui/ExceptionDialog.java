@@ -25,8 +25,11 @@ public class ExceptionDialog extends AbstractDialog {
     }
 
     private void init() {
-        addWindowListener(this);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setSize(380, 180);
+        setResizable(false);
+        setLocationRelativeTo(null);
+        addWindowListener(this);
 
         messageLabel = new JLabel(message);
         okButton = new JButton("Ok");
@@ -36,8 +39,6 @@ public class ExceptionDialog extends AbstractDialog {
         add(messageLabel);
         add(new JLabel());
         add(okButton);
-        setSize(400, 200);
-        setResizable(false);
     }
 
     @Override
