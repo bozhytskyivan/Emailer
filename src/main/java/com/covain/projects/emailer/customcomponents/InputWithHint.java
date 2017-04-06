@@ -64,6 +64,6 @@ public class InputWithHint extends JTextField implements FocusListener {
         if (getText().length() == 0) {
             showHint();
         }
-        
+
     }
 }

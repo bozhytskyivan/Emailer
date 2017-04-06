@@ -8,7 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Arrays;
 
-public class MainForm extends JFrame {
+public class MainForm extends JFrame implements SendingDialog.SenderListener {
 
     private JPanel basePanel;
     private JTextField subject;
@@ -44,6 +44,17 @@ public class MainForm extends JFrame {
     private void sendMessages() {
         setEnabled(false);
         new SendingDialog(this).start(new Message(subject.getText(), emailBody.getText(), Arrays.asList(filePath.getText()), recipients.getText()));
+    }
+
+    @Override
+    public void onSendingFinished() {
+
+    }
+
+    @Override
+    public void onSendingFailed(String recipients) {
+        this.recipients.setText(recipients);
+
     }
 
     private class ChoseFileActionListener implements ActionListener {
