@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MailParser {
 
@@ -20,6 +22,7 @@ public class MailParser {
         System.out.print("Enter output file path: ");
         String outputPath = scanner.nextLine();
         parseFile(inputPath, outputPath);
+        System.out.println(parseString("asdfasdfds@asdfads fdsafsdf asdf@ \nasdf@adfs"));
     }
 
     private static String parseFile(String inputPath, String outputPath) {
@@ -28,9 +31,9 @@ public class MailParser {
             List<String> lines = Files.readAllLines(Paths.get(inputPath), Charset.forName("UTF-8"));
             StringBuilder stringBuilder = new StringBuilder(lines.size() * 3);
             lines.stream()
-                    .map((line) -> line.split(" "))
+                    .map((line) -> line.split("[ \n]+"))
                     .forEach((words) -> Arrays.stream(words)
-                            .filter((word) -> word.contains("@"))
+                            .filter((word) -> Pattern.compile("\\S+@\\S+").matcher(word).find())
                             .forEach((email) -> stringBuilder.append(email + "\n")));
 
             result = stringBuilder.toString();
@@ -46,8 +49,8 @@ public class MailParser {
 
     public static List<String> parseString(String input) {
         List<String> result = new ArrayList<>();
-        Arrays.stream(input.split("[ |\\n]"))
-                .filter((word) -> word.contains("@"))
+        Arrays.stream(input.split("[ \\n]+"))
+                .filter((word) -> Pattern.compile("\\S+@\\S+").matcher(word).find())
                 .forEach(result::add);
         return result;
     }
