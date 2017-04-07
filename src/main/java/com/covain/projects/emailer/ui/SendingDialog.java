@@ -1,19 +1,22 @@
 package com.covain.projects.emailer.ui;
 
 import com.covain.projects.emailer.pojo.Message;
-import com.covain.projects.emailer.ssl.SendMessageService;
 
 import javax.mail.MessagingException;
 import javax.swing.*;
 import java.awt.event.WindowEvent;
 import java.util.Iterator;
 
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.DIALOG_TEXT_FONT;
+
 public class SendingDialog extends AbstractDialog {
 
+    public static final String SENDING_TEXT_PATTERN = "Sending message %d of %d";
+
     private JButton cancelButton;
+    private JLabel messageLabel;
     private JFrame owner;
     private boolean continueSending;
-
 
     public SendingDialog(JFrame owner) {
         super(owner, "Emailer: Sending");
@@ -25,17 +28,24 @@ public class SendingDialog extends AbstractDialog {
 
     private void init() {
         addWindowListener(this);
-        setSize(300, 300);
+        setSize(380, 180);
         setResizable(false);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(null);
-        cancelButton = new JButton("Cancel");
-        cancelButton.setBounds(100, 100, 100, 20);
+        setLocationRelativeTo(null);
 
+        messageLabel = new JLabel();
+        messageLabel.setFont(DIALOG_TEXT_FONT);
+        messageLabel.setBounds(100, 35, 210, 30);
+
+        cancelButton = new JButton("Cancel");
+        cancelButton.setBounds(85, 100, 230, 30);
         cancelButton.addActionListener(actionEvent -> {
             System.out.println("canceling sending");
             stop();
         });
+
+        add(messageLabel);
         add(cancelButton);
 
     }
@@ -80,16 +90,21 @@ public class SendingDialog extends AbstractDialog {
         }
         @Override
         public void run() {
+
             Iterator<String> recipientsIterator = message.getRecipients().iterator();
             int counter = 0;
+            int recipientsCount = message.getRecipients().size();
+
             while (recipientsIterator.hasNext()) {
                 String recipient = recipientsIterator.next();
                 System.out.println("continueSending = " + continueSending);
+
                 if (continueSending) {
                     try {
                     System.out.println("Sending message to: " + recipient);
-                    //SendMessageService.getService().send(message.getSubject(), message.getBody(), recipient, message.getAttachments());
                         counter++;
+                        //SendMessageService.getService().send(messageLabel.getSubject(), messageLabel.getBody(), recipient, messageLabel.getAttachments());
+                        messageLabel.setText(String.format(SENDING_TEXT_PATTERN, counter, message.getRecipients().size()));
                         if (counter == 3) {
                             throw new MessagingException("haha");
                         }
@@ -101,11 +116,15 @@ public class SendingDialog extends AbstractDialog {
                         ((SenderListener) owner).onSendingFailed(remainedRecipients.toString());
                         return;
                     }
+
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    ((SenderListener) owner).onSendingCancelled();
+                    dispose();
                 }
                 recipientsIterator.remove();
             }
@@ -120,6 +139,8 @@ public class SendingDialog extends AbstractDialog {
         void onSendingFinished();
 
         void onSendingFailed(String recipients);
+
+        void onSendingCancelled();
 
     }
 

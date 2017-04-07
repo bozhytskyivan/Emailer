@@ -35,6 +35,7 @@ public class MainForm extends JFrame implements SendingDialog.SenderListener {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setSize(800, 600);
         setResizable(false);
+        setLocationRelativeTo(null);
 
         setDefaultLookAndFeelDecorated(true);
         sendButton.addActionListener(actionEvent -> sendMessages());
@@ -55,6 +56,11 @@ public class MainForm extends JFrame implements SendingDialog.SenderListener {
     public void onSendingFailed(String recipients) {
         this.recipients.setText(recipients);
 
+    }
+
+    @Override
+    public void onSendingCancelled() {
+        setEnabled(true);
     }
 
     private class ChoseFileActionListener implements ActionListener {
