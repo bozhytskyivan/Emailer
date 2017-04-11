@@ -1,11 +1,11 @@
-package com.covain.projects.emailer.customcomponents;
+package com.covain.projects.emailer.ui.customcomponents;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
-import static com.covain.projects.emailer.ui.config.ComponentsConfigs.INPUT_TEXT_FONT;
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.PLAIN;
 
 public class InputWithHint extends JTextField implements FocusListener {
 
@@ -24,7 +24,7 @@ public class InputWithHint extends JTextField implements FocusListener {
             hint = text;
             showHint();
         }
-        setFont(INPUT_TEXT_FONT);
+        setFont(PLAIN);
         addFocusListener(this);
         add(new JLabel("text"));
 

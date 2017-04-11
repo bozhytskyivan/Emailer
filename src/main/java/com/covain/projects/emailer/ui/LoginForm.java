@@ -1,15 +1,15 @@
 package com.covain.projects.emailer.ui;
 
-import com.covain.projects.emailer.customcomponents.InputWithHint;
 import com.covain.projects.emailer.ssl.SendMessageService;
+import com.covain.projects.emailer.ui.customcomponents.InputWithHint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
-import static com.covain.projects.emailer.ui.config.ComponentsConfigs.DIALOG_TEXT_FONT;
-import static com.covain.projects.emailer.ui.config.ComponentsConfigs.INPUT_INSETS;
-import static com.covain.projects.emailer.ui.config.ComponentsConfigs.INPUT_TEXT_FONT;
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.BOLD;
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.PLAIN;
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Inset.INPUT;
 
 public class LoginForm extends JFrame {
 
@@ -28,7 +28,6 @@ public class LoginForm extends JFrame {
     }
 
     private void init() {
-        MainForm mainForm = new MainForm(this);
         setSize(380, 180);
         setResizable(false);
         setLocationRelativeTo(null);
@@ -36,26 +35,28 @@ public class LoginForm extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         JLabel email = new JLabel("Email");
-        email.setFont(DIALOG_TEXT_FONT);
+        email.setFont(BOLD);
         email.setBounds(20, 22, 80, 20);
 
         JLabel password = new JLabel("Password");
-        password.setFont(DIALOG_TEXT_FONT);
+        password.setFont(BOLD);
         password.setBounds(20, 62, 80, 20);
 
         emailTextField = new InputWithHint("example@gmail.com", true);
-        emailTextField.setFont(INPUT_TEXT_FONT);
+        emailTextField.setFont(PLAIN);
         emailTextField.setBounds(100, 15, 210, 30);
-        emailTextField.setMargin(INPUT_INSETS);
+        emailTextField.setMargin(INPUT);
 
         passwordTextField = new JPasswordField();
-        passwordTextField.setFont(DIALOG_TEXT_FONT);
+        passwordTextField.setFont(BOLD);
         passwordTextField.setBounds(100, 55, 210, 30);
-        passwordTextField.setMargin(INPUT_INSETS);
+        passwordTextField.setMargin(INPUT);
 
         loginButton = new JButton("Login");
         loginButton.setFont(email.getFont());
         loginButton.setBounds(85, 100, 230, 30);
+        getRootPane().setDefaultButton(loginButton);
+        loginButton.requestFocus();
         loginButton.addActionListener(e -> {
             String message = null;
             if (emailTextField.getText().length() == 0) {
@@ -71,7 +72,7 @@ public class LoginForm extends JFrame {
                 showExceptionDialog(message);
                 return;
             }
-            mainForm.setVisible(true);
+            new MainForm(this).setVisible(true);
             setVisible(false);
         });
 
@@ -91,9 +92,7 @@ public class LoginForm extends JFrame {
     }
 
     private boolean isUserDataEnteredCorrectly(String username, String password) {
-        SendMessageService messageService = SendMessageService.getNewService(username, password);
-        return true;// messageService.authenticate();
-
+        return SendMessageService.getNewService(username, password).authenticate();
     }
 
 }

@@ -1,12 +1,15 @@
 package com.covain.projects.emailer.ui;
 
 import com.covain.projects.emailer.pojo.Message;
+import com.covain.projects.emailer.ssl.SendMessageService;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 public class MainForm extends JFrame implements SendingDialog.SenderListener {
 
@@ -17,15 +20,14 @@ public class MainForm extends JFrame implements SendingDialog.SenderListener {
     private JTextArea recipients;
     private JButton openFileButton;
     private JLabel filePath;
-
-    private LoginForm loginForm;
+    private JComboBox delayComboBox;
 
     private JFileChooser fileChooser = new JFileChooser();
 
-    public MainForm(LoginForm loginForm) {
-        super("Emailer");
+    private int[] delays = new int[]{0, 1, 5, 10, 15, 20, 30, 60, 100, 120, 300};
 
-        this.loginForm = loginForm;
+    public MainForm(LoginForm loginForm) {
+        super("Emailer: " + SendMessageService.getService().username());
         init();
     }
 
@@ -40,27 +42,47 @@ public class MainForm extends JFrame implements SendingDialog.SenderListener {
         setDefaultLookAndFeelDecorated(true);
         sendButton.addActionListener(actionEvent -> sendMessages());
         openFileButton.addActionListener(new ChoseFileActionListener());
+        delayComboBox.setEditor(new BasicComboBoxEditor());
+        for (int i = 0; i < delays.length; i++) {
+            delayComboBox.addItem(delays[i]);
+        }
     }
 
     private void sendMessages() {
         setEnabled(false);
-        new SendingDialog(this).start(new Message(subject.getText(), emailBody.getText(), Arrays.asList(filePath.getText()), recipients.getText()));
+        List<String> files = "".equals(filePath.getText()) ? null : Arrays.asList(filePath.getText());
+        new SendingDialog(this).start(new Message(subject.getText()
+                        , emailBody.getText()
+                        , files
+                        , recipients.getText())
+                , (int) delayComboBox.getSelectedItem());
     }
 
     @Override
     public void onSendingFinished() {
-
+        ExceptionDialog
+                .createNew(this, "Sending sucessfully finished")
+                .display();
     }
 
     @Override
-    public void onSendingFailed(String recipients) {
-        this.recipients.setText(recipients);
+    public void onSendingFailed(String recipientsString) {
+        recipients.setText(recipientsString);
+        ExceptionDialog
+                .createNew(this, "Sending failed.")
+                .display();
+    }
 
+    @Override
+    public void onUpdate(String recipientsString) {
+        recipients.setText(recipientsString);
     }
 
     @Override
     public void onSendingCancelled() {
-        setEnabled(true);
+        ExceptionDialog
+                .createNew(this, "Message sending cancelled")
+                .display();
     }
 
     private class ChoseFileActionListener implements ActionListener {

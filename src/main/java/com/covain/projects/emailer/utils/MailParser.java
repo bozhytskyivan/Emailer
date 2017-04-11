@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MailParser {
@@ -49,7 +48,7 @@ public class MailParser {
 
     public static List<String> parseString(String input) {
         List<String> result = new ArrayList<>();
-        Arrays.stream(input.split("[ \\n]+"))
+        Arrays.stream(input.split("[ \\n\\t]+"))
                 .filter((word) -> Pattern.compile("\\S+@\\S+").matcher(word).find())
                 .forEach(result::add);
         return result;

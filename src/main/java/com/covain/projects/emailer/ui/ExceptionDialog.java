@@ -1,8 +1,9 @@
 package com.covain.projects.emailer.ui;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.WindowEvent;
+
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.PLAIN;
 
 public class ExceptionDialog extends AbstractDialog {
 
@@ -13,7 +14,7 @@ public class ExceptionDialog extends AbstractDialog {
     private String message;
 
     private ExceptionDialog(JFrame owner, String message) {
-        super(owner, "Emailer: me");
+        super(owner, "Emailer: action failed");
         this.owner = owner;
         this.message = message;
 
@@ -28,16 +29,20 @@ public class ExceptionDialog extends AbstractDialog {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setSize(380, 180);
         setResizable(false);
+        setLayout(null);
         setLocationRelativeTo(null);
         addWindowListener(this);
 
         messageLabel = new JLabel(message);
+        messageLabel.setFont(PLAIN);
+        int messageLength = messageLabel.getFont().getSize() * message.length() / 2;
+        messageLabel.setBounds((getWidth() - messageLength) / 2, 35, messageLength, 30);
+
         okButton = new JButton("Ok");
-        okButton.setSize(100, 50);
+        okButton.setBounds(140, 100, 100, 30);
         okButton.addActionListener(e -> dispose());
-        setLayout(new GridLayout(4, 1));
+
         add(messageLabel);
-        add(new JLabel());
         add(okButton);
     }
 
