@@ -141,6 +141,7 @@ public class MainFor extends JFrame {
             attachmentNames.add(name);
             add(name);
             add(deleteButton);
+            
         }
 
     }
