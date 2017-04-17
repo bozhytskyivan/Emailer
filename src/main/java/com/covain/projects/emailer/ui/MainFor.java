@@ -1,11 +1,13 @@
 package com.covain.projects.emailer.ui;
 
+import com.covain.projects.emailer.pojo.Attachment;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.BOLD;
@@ -13,7 +15,9 @@ import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.PLAI
 
 public class MainFor extends JFrame {
 
-    public static int MAX_ATTACHMENTS_SIZE = 10;
+    public static final int MAX_ATTACHMENTS_SIZE = 10;
+
+    private static final int[] DELAYS = new int[]{0, 1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120, 300};
 
     private JTextField mSubjectField;
     private JTextArea mRecipientsArea;
@@ -21,10 +25,12 @@ public class MainFor extends JFrame {
     private JTextArea mMessageBodyArea;
     private JComboBox<String> mDelayComboBox;
 
-    private List<String> attachments = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
     private List<JButton> removeAttachmentButtons = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
     private List<JLabel> attachmentNames = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
     private JFileChooser fileChooser = new JFileChooser();
+
+    private List<Attachment> attachments = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
+    private List<Attachment> visibleElements = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
 
     private int width = 700;
     private int height = 600;
@@ -33,8 +39,6 @@ public class MainFor extends JFrame {
     private int labelsHeight = 20;
     private int inputsLeftMargin = sideMargin + labelsWidth;
     private int inputsWidth = width - inputsLeftMargin - sideMargin;
-
-    private int currentAttachmentsSize = 0;
 
     public MainFor() {
         setSize(width, height);
@@ -81,11 +85,11 @@ public class MainFor extends JFrame {
 
         JLabel mMessageBodyLabel = new JLabel("Body");
         mMessageBodyLabel.setFont(BOLD);
-        mMessageBodyLabel.setBounds(sideMargin, 210, labelsWidth, labelsHeight);
+        mMessageBodyLabel.setBounds(sideMargin, 230, labelsWidth, labelsHeight);
 
         mMessageBodyArea = new JTextArea();
         mMessageBodyArea.setFont(PLAIN);
-        mMessageBodyArea.setBounds(inputsLeftMargin, 210, inputsWidth, 300);
+        mMessageBodyArea.setBounds(inputsLeftMargin, 230, inputsWidth, 300);
 
         JScrollPane bodyScrollPane = new JScrollPane(mMessageBodyArea);
         bodyScrollPane.setBounds(mMessageBodyArea.getBounds());
@@ -102,55 +106,56 @@ public class MainFor extends JFrame {
     }
 
     private void updateFiles() {
-        int leftBorder = mOpenFileButton.getX() + mOpenFileButton.getWidth() + 5;
-        int y = mOpenFileButton.getY();
-        int attachmentWidth = (width - leftBorder - sideMargin) / 5;
-        int fileNameWidth = attachmentWidth / 100 * 85;
-        int deleteButtonWidth =  15;
-        int componentHeight = labelsHeight - 5;
+        clearVisibleElements();
+        repaint();
+        if (attachments.size() > 0) {
+            int leftBorder = mOpenFileButton.getX() + mOpenFileButton.getWidth() + 5;
+            int y = mOpenFileButton.getY();
+            int attachmentWidth = (width - leftBorder - sideMargin) / 4 - 5;
+            int fileNameWidth = attachmentWidth - 17;
+            int deleteButtonWidth = 15;
+            int componentHeight = labelsHeight - 5;
 
-        leftBorder -= attachmentWidth;
+            leftBorder -= attachmentWidth;
 
-        System.out.println(attachmentWidth);
-        for (int i = 0; i < currentAttachmentsSize; i++) {
-            String fullFileName = attachments.get(i);
-            JLabel name = new JLabel(fullFileName.substring(fullFileName.lastIndexOf(File.separator) + 1));
-            JButton deleteButton = new JButton("x");
-            deleteButton.addActionListener((a) -> {
-                System.out.println();
-                int index = removeAttachmentButtons.indexOf(a.getSource());
-                remove(removeAttachmentButtons.get(index));
-                remove(attachmentNames.get(index));
-                attachments.remove(index);
-                removeAttachmentButtons.remove(index);
-                attachmentNames.remove(index);
-                currentAttachmentsSize--;
-                updateFiles();
-            });
-            deleteButton.setMargin(new Insets(0, 0, 0, 0));
             int componentY = y;
-            if (i % 2 == 0) {
-                leftBorder += attachmentWidth + 2;
-            } else {
-                componentY += labelsHeight + 2;
+            for (int i = 0; i < attachments.size(); i++) {
+                Attachment attachment = attachments.get(i);
+                JLabel fileName = attachment.getRemoveFileLabel();
+                JButton removeFileButton = attachment.getRemoveFileButton();
+                removeFileButton.setMargin(new Insets(0, 0, 0, 0));
+
+                if (i % 3 == 0) {
+                    componentY = y;
+                    leftBorder += attachmentWidth + 5;
+                } else {
+                    componentY += labelsHeight + 2;
+                }
+                fileName.setBounds(leftBorder, componentY, fileNameWidth, componentHeight);
+                removeFileButton.setBounds(leftBorder + attachmentWidth - deleteButtonWidth, componentY, deleteButtonWidth, componentHeight);
+
+                removeAttachmentButtons.add(removeFileButton);
+                attachmentNames.add(fileName);
+                add(fileName);
+                add(removeFileButton);
             }
-            name.setBounds(leftBorder, componentY, fileNameWidth, componentHeight);
-            deleteButton.setBounds(leftBorder + attachmentWidth - deleteButtonWidth, componentY, deleteButtonWidth, componentHeight);
-
-            removeAttachmentButtons.add(deleteButton);
-            attachmentNames.add(name);
-            add(name);
-            add(deleteButton);
-            
         }
+        visibleElements.clear();
+        visibleElements.addAll(attachments);
+    }
 
+    private void clearVisibleElements() {
+        for (int i = 0; i < visibleElements.size(); i++) {
+            remove(visibleElements.get(i).getRemoveFileButton());
+            remove(visibleElements.get(i).getRemoveFileLabel());
+        }
     }
 
     private class ChoseFileActionListener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            if (currentAttachmentsSize == MAX_ATTACHMENTS_SIZE) {
+            if (attachments.size() == MAX_ATTACHMENTS_SIZE) {
                 ExceptionDialog
                         .createNew(MainFor.this, "There are already 10 files attached.")
                         .display();
@@ -159,8 +164,16 @@ public class MainFor extends JFrame {
             int returnValue = fileChooser.showOpenDialog(MainFor.this);
             if (JFileChooser.APPROVE_OPTION == returnValue) {
                 File selectedFile = fileChooser.getSelectedFile();
-                attachments.add(selectedFile.getAbsolutePath());
-                currentAttachmentsSize++;
+                String absoluteFilePath = selectedFile.getAbsolutePath();
+                Attachment attachment = new Attachment();
+                attachment.setRemoveFileButton(new JButton("x"));
+                attachment.getRemoveFileButton().addActionListener((a) -> {
+                    attachments.remove(attachment);
+                    updateFiles();
+                });
+                attachment.setAbsoluteFilePath(absoluteFilePath);
+                attachment.setRemoveFileLabel(new JLabel(absoluteFilePath.substring(absoluteFilePath.lastIndexOf(File.separator) + 1)));
+                attachments.add(attachment);
                 updateFiles();
             }
         }
