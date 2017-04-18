@@ -69,7 +69,7 @@ public class LoginForm extends JFrame {
                 showExceptionDialog(message);
                 return;
             }
-            new MainForm(this).setVisible(true);
+            new MainFor(this).setVisible(true);
             setVisible(false);
         });
 

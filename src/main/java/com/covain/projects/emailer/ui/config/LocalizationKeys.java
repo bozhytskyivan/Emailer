@@ -16,6 +16,12 @@ public interface LocalizationKeys {
     String DELAY = "delay";
     String SEND = "send";
     String CANCEL = "cancel";
+    String MENU = "menu";
+    String LOG_OUT = "logout";
+    String LANGUAGE = "language";
+    String ENGLISH = "english";
+    String RUSSIAN = "russian";
+    String EXIT = "exit";
 
     String EMPTY_EMAIL_MESSAGE = "empty_email_message";
     String EMPTY_PASSWORD_MESSAGE = "empty_password_message";
@@ -29,5 +35,7 @@ public interface LocalizationKeys {
     String WAITING_MESSAGE = "waiting_message";
     String SENDING_MESSAGE = "sending_message";
     String CANCELLING_MESSAGE = "cancelling_message";
+    String LANGUAGE_CHANGED_MESSAGE = "language_changed_message";
+    String ERROR_CHANGING_LANGUAGE_MESSAGE = "language_change_error_message";
 
 }

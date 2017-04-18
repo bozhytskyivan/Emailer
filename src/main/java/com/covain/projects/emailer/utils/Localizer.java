@@ -42,14 +42,13 @@ public class Localizer {
         return locale;
     }
 
-    public static void setLocale(Locale locale) {
-        try (OutputStream propsOutputStream = new FileOutputStream(LOCALE_PROPERTIES)) {
-            Properties properties = new Properties();
-            properties.setProperty(APP_LOCALE, locale.getLanguage());
-            properties.store(propsOutputStream, null);
-        } catch (IOException e) {
-            LOGGER.error("Failed to save localization.", e);
-        }
+    public static void setLocale(String lang) throws IOException {
+        Locale locale = new Locale(lang);
+        OutputStream propsOutputStream = new FileOutputStream(LOCALE_PROPERTIES);
+        Properties properties = new Properties();
+        properties.setProperty(APP_LOCALE, lang);
+        properties.store(propsOutputStream, null);
+
         LOCALIZATION_BUNDLE = ResourceBundle.getBundle(APP_LOCALE, locale);
     }
 }

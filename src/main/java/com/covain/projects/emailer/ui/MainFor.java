@@ -9,22 +9,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.BOLD;
 import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.PLAIN;
 
-public class MainFor extends JFrame implements SendingDialog.SenderListener {
+public class MainFor extends JFrame implements SendingDialog.SenderListener, MenuListener {
 
     public static final int MAX_ATTACHMENTS_SIZE = 10;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainFor.class);
     private static final int[] DELAYS = new int[]{0, 1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120, 300};
+
+    private static final String EN = "en";
+    private static final String RU = "ru";
 
     private JTextField mSubjectField;
     private JTextArea mRecipientsArea;
@@ -32,6 +38,9 @@ public class MainFor extends JFrame implements SendingDialog.SenderListener {
     private JTextArea mMessageBodyArea;
     private JComboBox<Integer> mDelayComboBox;
     private JButton mSendButton;
+    private JMenuBar mMenuBar;
+
+    private LoginForm mLoginForm;
 
     private JFileChooser fileChooser = new JFileChooser();
 
@@ -39,15 +48,17 @@ public class MainFor extends JFrame implements SendingDialog.SenderListener {
     private List<Attachment> visibleElements = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
 
     private int width = 700;
-    private int height = 600;
+    private int height = 610;
     private int sideMargin = 20;
     private int labelsWidth = 100;
     private int labelsHeight = 20;
     private int inputsLeftMargin = sideMargin + labelsWidth;
     private int inputsWidth = width - inputsLeftMargin - sideMargin;
 
-    public MainFor() {
-//        super("Emailer: " + SendMessageService.getService().username());
+    public MainFor(LoginForm loginForm) {
+        super("Emailer: " + (SendMessageService.getService() == null ? "Fake user" : SendMessageService.getService().username()));
+
+        mLoginForm = loginForm;
 
         setSize(width, height);
         setResizable(false);
@@ -63,53 +74,55 @@ public class MainFor extends JFrame implements SendingDialog.SenderListener {
 
     private void initComponents() {
 
+        initMenu();
+
         JLabel subjectLabel = new JLabel(Localizer.getString(LocalizationKeys.SUBJECT));
         subjectLabel.setFont(BOLD);
-        subjectLabel.setBounds(sideMargin, 30, labelsWidth, labelsHeight);
+        subjectLabel.setBounds(sideMargin, 40, labelsWidth, labelsHeight);
 
         mSubjectField = new JTextField();
         mSubjectField.setFont(PLAIN);
-        mSubjectField.setBounds(inputsLeftMargin, 25, inputsWidth, 25);
+        mSubjectField.setBounds(inputsLeftMargin, 35, inputsWidth, 25);
 
         JLabel recipientsLabel = new JLabel(Localizer.getString(LocalizationKeys.RECIPIENTS));
         recipientsLabel.setFont(BOLD);
-        recipientsLabel.setBounds(sideMargin, 60, labelsWidth, labelsHeight);
+        recipientsLabel.setBounds(sideMargin, 70, labelsWidth, labelsHeight);
 
 
         mRecipientsArea = new JTextArea();
         mRecipientsArea.setFont(PLAIN);
-        mRecipientsArea.setBounds(inputsLeftMargin, 60, inputsWidth, 100);
+        mRecipientsArea.setBounds(inputsLeftMargin, 70, inputsWidth, 100);
 
         JScrollPane scrollPane = new JScrollPane(mRecipientsArea);
         scrollPane.setBounds(mRecipientsArea.getBounds());
 
         JLabel openFileLabel = new JLabel(Localizer.getString(LocalizationKeys.OPEN_FILE));
         openFileLabel.setFont(BOLD);
-        openFileLabel.setBounds(sideMargin, 165, labelsWidth, labelsHeight);
+        openFileLabel.setBounds(sideMargin, 175, labelsWidth, labelsHeight);
 
         mOpenFileButton = new JButton(Localizer.getString(LocalizationKeys.OPEN));
         mOpenFileButton.setMargin(new Insets(0, 0, 0, 0));
-        mOpenFileButton.setBounds(inputsLeftMargin, 165, 75, 25);
+        mOpenFileButton.setBounds(inputsLeftMargin, 175, 75, 25);
         mOpenFileButton.addActionListener(new ChoseFileActionListener());
 
         JLabel mMessageBodyLabel = new JLabel(Localizer.getString(LocalizationKeys.MESSAGE_BODY));
         mMessageBodyLabel.setFont(BOLD);
-        mMessageBodyLabel.setBounds(sideMargin, 230, labelsWidth, labelsHeight);
+        mMessageBodyLabel.setBounds(sideMargin, 240, labelsWidth, labelsHeight);
 
         mMessageBodyArea = new JTextArea();
         mMessageBodyArea.setFont(PLAIN);
-        mMessageBodyArea.setBounds(inputsLeftMargin, 230, inputsWidth, 300);
+        mMessageBodyArea.setBounds(inputsLeftMargin, 240, inputsWidth, 300);
 
         JScrollPane bodyScrollPane = new JScrollPane(mMessageBodyArea);
         bodyScrollPane.setBounds(mMessageBodyArea.getBounds());
 
         JLabel mDelayLabel = new JLabel(Localizer.getString(LocalizationKeys.DELAY));
         mDelayLabel.setFont(BOLD);
-        mDelayLabel.setBounds(sideMargin, 480, labelsWidth, 20);
+        mDelayLabel.setBounds(sideMargin, 490, labelsWidth, 20);
 
         mDelayComboBox = new JComboBox<>();
         mDelayComboBox.setFont(BOLD);
-        mDelayComboBox.setBounds(sideMargin, 505, labelsWidth - 5, 25);
+        mDelayComboBox.setBounds(sideMargin, 515, labelsWidth - 5, 25);
         mDelayComboBox.setEditable(true);
         for (int i = 0; i < DELAYS.length; i++) {
             mDelayComboBox.addItem(DELAYS[i]);
@@ -117,9 +130,10 @@ public class MainFor extends JFrame implements SendingDialog.SenderListener {
 
         mSendButton = new JButton(Localizer.getString(LocalizationKeys.SEND));
         mSendButton.setFont(BOLD);
-        mSendButton.setBounds(inputsLeftMargin, 535, inputsWidth, 25);
+        mSendButton.setBounds(inputsLeftMargin, 545, inputsWidth, 25);
         mSendButton.addActionListener((a) -> sendMessages());
 
+        add(mMenuBar);
         add(subjectLabel);
         add(mSubjectField);
         add(recipientsLabel);
@@ -131,6 +145,61 @@ public class MainFor extends JFrame implements SendingDialog.SenderListener {
         add(mDelayLabel);
         add(mDelayComboBox);
         add(mSendButton);
+
+    }
+
+    private void initMenu() {
+        mMenuBar = new JMenuBar();
+
+        JMenu menu = new JMenu(Localizer.getString(LocalizationKeys.MENU));
+
+        JMenuItem logOutMenuItem = new JMenuItem(Localizer.getString(LocalizationKeys.LOG_OUT));
+        logOutMenuItem.addActionListener((e) -> logout());
+        menu.add(logOutMenuItem);
+
+        JMenu languageMenuItem = new JMenu(Localizer.getString(LocalizationKeys.LANGUAGE));
+
+        JMenuItem engMenuItem = new JMenuItem(Localizer.getString(LocalizationKeys.ENGLISH));
+        engMenuItem.addActionListener((e) -> {
+            if (!EN.equals(Localizer.getLocale().getLanguage()))
+                changeLanguage(EN);
+        });
+        languageMenuItem.add(engMenuItem);
+
+        JMenuItem rusMenuItem = new JMenuItem(Localizer.getString(LocalizationKeys.RUSSIAN));
+        rusMenuItem.addActionListener((e) -> {
+            if (!RU.equals(Localizer.getLocale().getLanguage()))
+                changeLanguage(RU);
+        });
+        languageMenuItem.add(rusMenuItem);
+        menu.add(languageMenuItem);
+
+        JMenu exitMenu = new JMenu(Localizer.getString(LocalizationKeys.EXIT));
+        exitMenu.addMenuListener(this);
+
+
+        mMenuBar.add(menu);
+        mMenuBar.add(exitMenu);
+        mMenuBar.setBounds(0, 0, width, 18);
+    }
+
+    private void logout() {
+        new LoginForm();
+        dispose();
+    }
+
+    private void changeLanguage(String lang) {
+        try {
+            Localizer.setLocale(lang);
+            ExceptionDialog
+                    .createNew(this, Localizer.getString(LocalizationKeys.LANGUAGE_CHANGED_MESSAGE))
+                    .display();
+        } catch (IOException e) {
+            LOGGER.error("Failed to save localization.", e);
+            ExceptionDialog
+                    .createNew(this, Localizer.getString(LocalizationKeys.ERROR_CHANGING_LANGUAGE_MESSAGE))
+                    .display();
+        }
 
     }
 
@@ -233,6 +302,21 @@ public class MainFor extends JFrame implements SendingDialog.SenderListener {
             result = Localizer.getString(LocalizationKeys.EMPTY_CONTENT_MESSAGE);
         }
         return result;
+    }
+
+    @Override
+    public void menuSelected(MenuEvent e) {
+        System.exit(0);
+    }
+
+    @Override
+    public void menuDeselected(MenuEvent e) {
+
+    }
+
+    @Override
+    public void menuCanceled(MenuEvent e) {
+
     }
 
     private class ChoseFileActionListener implements ActionListener {
