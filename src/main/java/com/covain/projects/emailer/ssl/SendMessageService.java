@@ -8,8 +8,11 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import java.io.File;
 import java.util.List;
 import java.util.Properties;
+
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.LOGGER;
 
 public class SendMessageService {
 
@@ -53,18 +56,20 @@ public class SendMessageService {
         message.setFrom(new InternetAddress(username));
         message.setRecipient(Message.RecipientType.TO, new InternetAddress(toEmail));
         message.setSubject(subject);
-        message.setText(text);
+        Multipart multipart = new MimeMultipart();
+        BodyPart messageBodyPart = new MimeBodyPart();
+        messageBodyPart.setText(text);
+        multipart.addBodyPart(messageBodyPart);
         if (null != attachments && !attachments.isEmpty()) {
-            BodyPart messageBodyPart;
-            final Multipart multipart = new MimeMultipart();
             for (String attachment : attachments) {
                 messageBodyPart = new MimeBodyPart();
                 DataSource dataSource = new FileDataSource(attachment);
                 messageBodyPart.setDataHandler(new DataHandler(dataSource));
+                messageBodyPart.setFileName(attachment.substring(attachment.lastIndexOf(File.separatorChar) + 1));
                 multipart.addBodyPart(messageBodyPart);
             }
-            message.setContent(multipart);
         }
+        message.setContent(multipart);
         Transport.send(message);
     }
 
@@ -73,7 +78,9 @@ public class SendMessageService {
             Transport transport = session.getTransport("smtp");
             transport.connect();
             authenticationPassed = true;
+            LOGGER.info("Logged in successfully");
         } catch (MessagingException e) {
+            LOGGER.error("Login failed: {}", e);
             authenticationPassed = false;
         }
         return authenticationPassed;

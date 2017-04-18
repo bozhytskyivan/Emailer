@@ -1,9 +1,11 @@
 package com.covain.projects.emailer.pojo;
 
+import com.covain.projects.emailer.ui.MainFor;
 import com.covain.projects.emailer.utils.MailParser;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Message {
@@ -12,10 +14,12 @@ public class Message {
     private List<String> attachments;
     private List<String> recipients;
 
-    public Message(@Nullable String subject, @Nullable String body, @Nullable List<String> attachments, @NotNull String recipients) {
+    public Message(@Nullable String subject, @Nullable String body, @Nullable List attachments, @NotNull String recipients) {
         this.subject = subject;
         this.body = body;
-        this.attachments = attachments;
+        if (attachments != null && attachments.size() > 0) {
+            setAttachments(attachments);
+        }
         setRecipients(recipients);
     }
 
@@ -39,8 +43,15 @@ public class Message {
         return attachments;
     }
 
-    public void setAttachments(List<String> attachments) {
-        this.attachments = attachments;
+    public void setAttachments(List attachments) {
+        if (attachments.get(0) instanceof String) {
+            this.attachments = attachments;
+        } else if (attachments.get(0) instanceof Attachment) {
+            this.attachments = new ArrayList<>(MainFor.MAX_ATTACHMENTS_SIZE);
+            for (int i = 0; i < attachments.size(); i++) {
+                this.attachments.add(((Attachment) attachments.get(i)).getAbsoluteFilePath());
+            }
+        }
     }
 
     public List<String> getRecipients() {

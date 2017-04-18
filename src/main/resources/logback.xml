@@ -19,7 +19,7 @@
         </triggeringPolicy>
     </appender>
 
-    <logger name="com.covain.projects.emailer" level="DEBUG">
+    <logger name="com.covain.projects.emailer" level="INFO">
         <appender-ref ref="EMAILER"/>
     </logger>
 </configuration>

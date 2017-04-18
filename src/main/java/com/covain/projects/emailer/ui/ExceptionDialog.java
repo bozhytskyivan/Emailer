@@ -1,5 +1,8 @@
 package com.covain.projects.emailer.ui;
 
+import com.covain.projects.emailer.ui.config.LocalizationKeys;
+import com.covain.projects.emailer.utils.Localizer;
+
 import javax.swing.*;
 import java.awt.event.WindowEvent;
 
@@ -14,7 +17,7 @@ public class ExceptionDialog extends AbstractDialog {
     private String message;
 
     private ExceptionDialog(JFrame owner, String message) {
-        super(owner, "Emailer: action failed");
+        super(owner, Localizer.getString(LocalizationKeys.EXCEPTION_DIALOG_TITLE));
         this.owner = owner;
         this.message = message;
 
@@ -35,7 +38,10 @@ public class ExceptionDialog extends AbstractDialog {
 
         messageLabel = new JLabel(message);
         messageLabel.setFont(PLAIN);
-        int messageLength = messageLabel.getFont().getSize() * message.length() / 2;
+        int messageLength = messageLabel.getFont().getSize() * message.length() / 2 + messageLabel.getFont().getSize();
+        if (messageLength > 0 && messageLength > getWidth()) {
+            setSize(messageLength + 20, getHeight());
+        }
         messageLabel.setBounds((getWidth() - messageLength) / 2, 35, messageLength, 30);
 
         okButton = new JButton("Ok");
@@ -48,13 +54,11 @@ public class ExceptionDialog extends AbstractDialog {
 
     @Override
     public void windowOpened(WindowEvent e) {
-        System.out.println("Window opened");
         owner.setEnabled(false);
     }
 
     @Override
     public void windowClosing(WindowEvent e) {
-        System.out.println("Window closing");
         if (!owner.isEnabled()) {
             owner.setEnabled(true);
         }
@@ -62,7 +66,6 @@ public class ExceptionDialog extends AbstractDialog {
 
     @Override
     public void windowClosed(WindowEvent e) {
-        System.out.println("Window closed");
         if (!owner.isEnabled()) {
             owner.setEnabled(true);
         }

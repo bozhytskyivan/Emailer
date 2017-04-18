@@ -2,6 +2,7 @@ package com.covain.projects.emailer.ui;
 
 import com.covain.projects.emailer.pojo.Message;
 import com.covain.projects.emailer.ssl.SendMessageService;
+import com.covain.projects.emailer.ui.config.ComponentsConfigs;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
@@ -10,6 +11,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.LOGGER;
 
 public class MainForm extends JFrame implements SendingDialog.SenderListener {
 
@@ -60,13 +63,15 @@ public class MainForm extends JFrame implements SendingDialog.SenderListener {
 
     @Override
     public void onSendingFinished() {
+        LOGGER.info("Sending successfully finished");
         ExceptionDialog
                 .createNew(this, "Sending sucessfully finished")
                 .display();
     }
 
     @Override
-    public void onSendingFailed(String recipientsString) {
+    public void onSendingFailed(String recipientsString, Exception e) {
+        LOGGER.error("Message sending failed: {}", e);
         recipients.setText(recipientsString);
         ExceptionDialog
                 .createNew(this, "Sending failed.")
@@ -74,12 +79,14 @@ public class MainForm extends JFrame implements SendingDialog.SenderListener {
     }
 
     @Override
-    public void onUpdate(String recipientsString) {
+    public void onMessageSent(String recipientsString, String sentTo) {
+        LOGGER.info("Message successfully sent to {}", sentTo);
         recipients.setText(recipientsString);
     }
 
     @Override
     public void onSendingCancelled() {
+        LOGGER.warn("Sending cancelled by user");
         ExceptionDialog
                 .createNew(this, "Message sending cancelled")
                 .display();

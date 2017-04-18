@@ -2,6 +2,8 @@ package com.covain.projects.emailer.ui;
 
 import com.covain.projects.emailer.pojo.Message;
 import com.covain.projects.emailer.ssl.SendMessageService;
+import com.covain.projects.emailer.ui.config.LocalizationKeys;
+import com.covain.projects.emailer.utils.Localizer;
 
 import javax.mail.MessagingException;
 import javax.swing.*;
@@ -10,10 +12,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.BOLD;
+import static com.covain.projects.emailer.ui.config.ComponentsConfigs.LOGGER;
 
 public class SendingDialog extends AbstractDialog {
-
-    public static final String SENDING_TEXT_PATTERN = "Sending message %d of %d";
 
     private JButton cancelButton;
     private JLabel messageLabel;
@@ -22,7 +23,7 @@ public class SendingDialog extends AbstractDialog {
     private boolean continueSending;
 
     public SendingDialog(JFrame owner) {
-        super(owner, "Emailer: Sending");
+        super(owner, Localizer.getString(LocalizationKeys.SENDING_TITLE));
         this.owner = owner;
         mSenderListener = (SenderListener) owner;
 
@@ -42,7 +43,7 @@ public class SendingDialog extends AbstractDialog {
         messageLabel.setFont(BOLD);
         messageLabel.setBounds(100, 35, 210, 30);
 
-        cancelButton = new JButton("Cancel");
+        cancelButton = new JButton(Localizer.getString(LocalizationKeys.CANCEL));
         cancelButton.setBounds(85, 100, 230, 30);
         cancelButton.addActionListener(actionEvent -> {
             System.out.println("canceling sending");
@@ -64,7 +65,7 @@ public class SendingDialog extends AbstractDialog {
     private synchronized void stop() {
         if (continueSending) {
             continueSending = false;
-            messageLabel.setText("Cancelling (Waiting for sending previous message)");
+            messageLabel.setText(Localizer.getString(LocalizationKeys.CANCELLING_MESSAGE));
         } else {
             dispose();
         }
@@ -112,23 +113,28 @@ public class SendingDialog extends AbstractDialog {
 
             while (recipientsIterator.hasNext() && continueSending) {
                 String recipient = recipientsIterator.next();
+                LOGGER.info("Sending message to: {}", recipient);
 
                 try {
                     counter++;
-                    messageLabel.setText(String.format(SENDING_TEXT_PATTERN, counter, recipientsCount));
+                    messageLabel.setText(String.format(Localizer.getString(LocalizationKeys.SENDING_MESSAGE), counter, recipientsCount));
                     SendMessageService.getService().send(message.getSubject(), message.getBody(), recipient, message.getAttachments());
                     recipientsIterator.remove();
-                    mSenderListener.onUpdate(getRecipientsString(message.getRecipients()));
+                    mSenderListener.onMessageSent(getRecipientsString(message.getRecipients()), recipient);
                 } catch (MessagingException e) {
-                    mSenderListener.onSendingFailed(getRecipientsString(message.getRecipients()));
+                    e.printStackTrace();
+                    mSenderListener.onSendingFailed(getRecipientsString(message.getRecipients()), e);
                     dispose();
                     return;
                 }
 
-                try {
-                    Thread.sleep(delay * ONE_SEC);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if (recipientsIterator.hasNext()) {
+                    try {
+                        messageLabel.setText(String.format(Localizer.getString(LocalizationKeys.WAITING_MESSAGE), delay));
+                        Thread.sleep(delay * ONE_SEC);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -157,9 +163,9 @@ public class SendingDialog extends AbstractDialog {
 
         void onSendingFinished();
 
-        void onSendingFailed(String recipients);
+        void onSendingFailed(String recipients, Exception e);
 
-        void onUpdate(String recipients);
+        void onMessageSent(String recipients, String sentTo);
 
         void onSendingCancelled();
 

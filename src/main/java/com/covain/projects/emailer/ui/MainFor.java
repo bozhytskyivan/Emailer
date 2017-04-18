@@ -1,32 +1,38 @@
 package com.covain.projects.emailer.ui;
 
 import com.covain.projects.emailer.pojo.Attachment;
+import com.covain.projects.emailer.pojo.Message;
+import com.covain.projects.emailer.ssl.SendMessageService;
+import com.covain.projects.emailer.ui.config.LocalizationKeys;
+import com.covain.projects.emailer.utils.Localizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.BOLD;
 import static com.covain.projects.emailer.ui.config.ComponentsConfigs.Fonts.PLAIN;
 
-public class MainFor extends JFrame {
+public class MainFor extends JFrame implements SendingDialog.SenderListener {
 
     public static final int MAX_ATTACHMENTS_SIZE = 10;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MainFor.class);
     private static final int[] DELAYS = new int[]{0, 1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120, 300};
 
     private JTextField mSubjectField;
     private JTextArea mRecipientsArea;
     private JButton mOpenFileButton;
     private JTextArea mMessageBodyArea;
-    private JComboBox<String> mDelayComboBox;
+    private JComboBox<Integer> mDelayComboBox;
+    private JButton mSendButton;
 
-    private List<JButton> removeAttachmentButtons = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
-    private List<JLabel> attachmentNames = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
     private JFileChooser fileChooser = new JFileChooser();
 
     private List<Attachment> attachments = new ArrayList<>(MAX_ATTACHMENTS_SIZE);
@@ -41,10 +47,13 @@ public class MainFor extends JFrame {
     private int inputsWidth = width - inputsLeftMargin - sideMargin;
 
     public MainFor() {
+//        super("Emailer: " + SendMessageService.getService().username());
+
         setSize(width, height);
         setResizable(false);
         setLayout(null);
         setLocationRelativeTo(null);
+        setAlwaysOnTop(true);
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -54,7 +63,7 @@ public class MainFor extends JFrame {
 
     private void initComponents() {
 
-        JLabel subjectLabel = new JLabel("Subject");
+        JLabel subjectLabel = new JLabel(Localizer.getString(LocalizationKeys.SUBJECT));
         subjectLabel.setFont(BOLD);
         subjectLabel.setBounds(sideMargin, 30, labelsWidth, labelsHeight);
 
@@ -62,7 +71,7 @@ public class MainFor extends JFrame {
         mSubjectField.setFont(PLAIN);
         mSubjectField.setBounds(inputsLeftMargin, 25, inputsWidth, 25);
 
-        JLabel recipientsLabel = new JLabel("Recipients");
+        JLabel recipientsLabel = new JLabel(Localizer.getString(LocalizationKeys.RECIPIENTS));
         recipientsLabel.setFont(BOLD);
         recipientsLabel.setBounds(sideMargin, 60, labelsWidth, labelsHeight);
 
@@ -74,16 +83,16 @@ public class MainFor extends JFrame {
         JScrollPane scrollPane = new JScrollPane(mRecipientsArea);
         scrollPane.setBounds(mRecipientsArea.getBounds());
 
-        JLabel openFileLabel = new JLabel("Open file");
+        JLabel openFileLabel = new JLabel(Localizer.getString(LocalizationKeys.OPEN_FILE));
         openFileLabel.setFont(BOLD);
         openFileLabel.setBounds(sideMargin, 165, labelsWidth, labelsHeight);
 
-        mOpenFileButton = new JButton("Open");
+        mOpenFileButton = new JButton(Localizer.getString(LocalizationKeys.OPEN));
         mOpenFileButton.setMargin(new Insets(0, 0, 0, 0));
-        mOpenFileButton.setBounds(inputsLeftMargin, 165, 50, 25);
+        mOpenFileButton.setBounds(inputsLeftMargin, 165, 75, 25);
         mOpenFileButton.addActionListener(new ChoseFileActionListener());
 
-        JLabel mMessageBodyLabel = new JLabel("Body");
+        JLabel mMessageBodyLabel = new JLabel(Localizer.getString(LocalizationKeys.MESSAGE_BODY));
         mMessageBodyLabel.setFont(BOLD);
         mMessageBodyLabel.setBounds(sideMargin, 230, labelsWidth, labelsHeight);
 
@@ -94,6 +103,23 @@ public class MainFor extends JFrame {
         JScrollPane bodyScrollPane = new JScrollPane(mMessageBodyArea);
         bodyScrollPane.setBounds(mMessageBodyArea.getBounds());
 
+        JLabel mDelayLabel = new JLabel(Localizer.getString(LocalizationKeys.DELAY));
+        mDelayLabel.setFont(BOLD);
+        mDelayLabel.setBounds(sideMargin, 480, labelsWidth, 20);
+
+        mDelayComboBox = new JComboBox<>();
+        mDelayComboBox.setFont(BOLD);
+        mDelayComboBox.setBounds(sideMargin, 505, labelsWidth - 5, 25);
+        mDelayComboBox.setEditable(true);
+        for (int i = 0; i < DELAYS.length; i++) {
+            mDelayComboBox.addItem(DELAYS[i]);
+        }
+
+        mSendButton = new JButton(Localizer.getString(LocalizationKeys.SEND));
+        mSendButton.setFont(BOLD);
+        mSendButton.setBounds(inputsLeftMargin, 535, inputsWidth, 25);
+        mSendButton.addActionListener((a) -> sendMessages());
+
         add(subjectLabel);
         add(mSubjectField);
         add(recipientsLabel);
@@ -102,6 +128,9 @@ public class MainFor extends JFrame {
         add(mOpenFileButton);
         add(mMessageBodyLabel);
         add(bodyScrollPane);
+        add(mDelayLabel);
+        add(mDelayComboBox);
+        add(mSendButton);
 
     }
 
@@ -134,8 +163,6 @@ public class MainFor extends JFrame {
                 fileName.setBounds(leftBorder, componentY, fileNameWidth, componentHeight);
                 removeFileButton.setBounds(leftBorder + attachmentWidth - deleteButtonWidth, componentY, deleteButtonWidth, componentHeight);
 
-                removeAttachmentButtons.add(removeFileButton);
-                attachmentNames.add(fileName);
                 add(fileName);
                 add(removeFileButton);
             }
@@ -151,13 +178,70 @@ public class MainFor extends JFrame {
         }
     }
 
+    private void sendMessages() {
+        setEnabled(false);
+        String exception = checkUserInput();
+        if (exception != null) {
+            ExceptionDialog.createNew(this, exception).display();
+            return;
+        }
+        new SendingDialog(this).start(new Message(mSubjectField.getText()
+                        , mMessageBodyArea.getText()
+                        , attachments
+                        , mRecipientsArea.getText())
+                , (Integer) mDelayComboBox.getEditor().getItem());
+    }
+
+    @Override
+    public void onSendingFinished() {
+        LOGGER.info("Sending successfully finished");
+        ExceptionDialog
+                .createNew(this, Localizer.getString(LocalizationKeys.SENDING_FINISHED))
+                .display();
+    }
+
+    @Override
+    public void onSendingFailed(String recipientsString, Exception e) {
+        LOGGER.error("Message sending failed: {}", e);
+        mRecipientsArea.setText(recipientsString);
+        ExceptionDialog
+                .createNew(this, Localizer.getString(LocalizationKeys.SENDING_FAILED_MESSAGE))
+                .display();
+    }
+
+    @Override
+    public void onMessageSent(String recipientsString, String sentTo) {
+        LOGGER.info("Message successfully sent to {}", sentTo);
+        mRecipientsArea.setText(recipientsString);
+    }
+
+    @Override
+    public void onSendingCancelled() {
+        LOGGER.warn("Sending cancelled by user");
+        ExceptionDialog
+                .createNew(this, Localizer.getString(LocalizationKeys.SENDING_CANCELLED))
+                .display();
+    }
+
+    private String checkUserInput() {
+        String result = null;
+        String emptyString = "";
+        if (emptyString.equals(mRecipientsArea.getText())) {
+            result = Localizer.getString(LocalizationKeys.EMPTY_RECIPIENTS);
+        }
+        if (result == null && emptyString.equals(mMessageBodyArea.getText()) && attachments.isEmpty()) {
+            result = Localizer.getString(LocalizationKeys.EMPTY_CONTENT_MESSAGE);
+        }
+        return result;
+    }
+
     private class ChoseFileActionListener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             if (attachments.size() == MAX_ATTACHMENTS_SIZE) {
                 ExceptionDialog
-                        .createNew(MainFor.this, "There are already 10 files attached.")
+                        .createNew(MainFor.this, Localizer.getString(LocalizationKeys.MAX_FILES_SELECTED))
                         .display();
                 return;
             }

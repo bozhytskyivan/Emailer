@@ -1,8 +1,13 @@
 package com.covain.projects.emailer.ui.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.*;
 
 public interface ComponentsConfigs {
+
+    Logger LOGGER = LoggerFactory.getLogger("Emailer");
 
     interface Fonts {
 

@@ -6,7 +6,7 @@ import com.covain.projects.emailer.ui.MainFor;
 
 public class Main {
     public static void main(String[] args) {
-//        new MainFor();
-        new LoginForm();
+        new MainFor();
+//        new LoginForm();
     }
 }
