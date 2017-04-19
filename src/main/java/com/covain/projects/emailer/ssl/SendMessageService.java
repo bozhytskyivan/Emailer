@@ -1,5 +1,8 @@
 package com.covain.projects.emailer.ssl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
@@ -12,16 +15,13 @@ import java.io.File;
 import java.util.List;
 import java.util.Properties;
 
-import static com.covain.projects.emailer.ui.config.ComponentsConfigs.LOGGER;
-
 public class SendMessageService {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(SendMessageService.class);
+    private static SendMessageService INSTANCE = null;
 
     private String username;
     private Session session;
-
-    private boolean authenticationPassed = false;
-
-    private static SendMessageService INSTANCE = null;
 
     private SendMessageService(final String username, final String password) {
         this.username = username;
@@ -77,13 +77,11 @@ public class SendMessageService {
         try {
             Transport transport = session.getTransport("smtp");
             transport.connect();
-            authenticationPassed = true;
-            LOGGER.info("Logged in successfully");
+            return true;
         } catch (MessagingException e) {
-            LOGGER.error("Login failed: {}", e);
-            authenticationPassed = false;
+            LOGGER.error("Authentication failed.", e);
         }
-        return authenticationPassed;
+        return false;
     }
 
 }

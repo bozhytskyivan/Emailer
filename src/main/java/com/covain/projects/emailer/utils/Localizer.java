@@ -15,7 +15,7 @@ public class Localizer {
     private static Logger LOGGER = LoggerFactory.getLogger(Localizer.class);
 
     private static final String APP_LOCALE = "locale";
-    private static final String LOCALE_PROPERTIES = "localization.properties";
+    private static final String APP_LOCALE_PROPERTIES = "app_locale.properties";
     private static final String DEFAULT_LOCALE = "ru";
 
     private static ResourceBundle LOCALIZATION_BUNDLE;
@@ -30,7 +30,9 @@ public class Localizer {
 
     public static Locale getLocale() {
         Locale locale;
-        try (InputStream propsInputStream = new FileInputStream(LOCALE_PROPERTIES)) {
+
+        try (InputStream propsInputStream = new FileInputStream(ClassLoader
+                .getSystemClassLoader().getResource(APP_LOCALE_PROPERTIES).getFile())) {
             Properties properties = new Properties();
             properties.load(propsInputStream);
             String savedLocale = properties.getProperty(APP_LOCALE, DEFAULT_LOCALE);
@@ -44,10 +46,12 @@ public class Localizer {
 
     public static void setLocale(String lang) throws IOException {
         Locale locale = new Locale(lang);
-        OutputStream propsOutputStream = new FileOutputStream(LOCALE_PROPERTIES);
-        Properties properties = new Properties();
-        properties.setProperty(APP_LOCALE, lang);
-        properties.store(propsOutputStream, null);
+        try (OutputStream propsOutputStream = new FileOutputStream(ClassLoader
+                .getSystemClassLoader().getResource(APP_LOCALE_PROPERTIES).getFile())) {
+            Properties properties = new Properties();
+            properties.setProperty(APP_LOCALE, lang);
+            properties.store(propsOutputStream, null);
+        }
 
         LOCALIZATION_BUNDLE = ResourceBundle.getBundle(APP_LOCALE, locale);
     }

@@ -1,6 +1,6 @@
 package com.covain.projects.emailer.pojo;
 
-import com.covain.projects.emailer.ui.MainFor;
+import com.covain.projects.emailer.ui.MainForm;
 import com.covain.projects.emailer.utils.MailParser;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
@@ -47,7 +47,7 @@ public class Message {
         if (attachments.get(0) instanceof String) {
             this.attachments = attachments;
         } else if (attachments.get(0) instanceof Attachment) {
-            this.attachments = new ArrayList<>(MainFor.MAX_ATTACHMENTS_SIZE);
+            this.attachments = new ArrayList<>(MainForm.MAX_ATTACHMENTS_SIZE);
             for (int i = 0; i < attachments.size(); i++) {
                 this.attachments.add(((Attachment) attachments.get(i)).getAbsoluteFilePath());
             }

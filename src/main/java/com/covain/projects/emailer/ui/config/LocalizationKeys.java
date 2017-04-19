@@ -37,5 +37,7 @@ public interface LocalizationKeys {
     String CANCELLING_MESSAGE = "cancelling_message";
     String LANGUAGE_CHANGED_MESSAGE = "language_changed_message";
     String ERROR_CHANGING_LANGUAGE_MESSAGE = "language_change_error_message";
+    String WRONG_DELAY_NUMBER_MESSAGE = "wrong_delay_number_message";
+    String NO_SUCH_RECIPIENTS_MESSAGE = "no_such_recipients_message";
 
 }

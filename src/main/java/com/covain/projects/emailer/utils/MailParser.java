@@ -8,21 +8,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 import java.util.regex.Pattern;
 
 public class MailParser {
-
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter file path: ");
-        String inputPath = scanner.nextLine();
-        System.out.println();
-        System.out.print("Enter output file path: ");
-        String outputPath = scanner.nextLine();
-        parseFile(inputPath, outputPath);
-        System.out.println(parseString("asdfasdfds@asdfads fdsafsdf asdf@ \nasdf@adfs"));
-    }
 
     private static String parseFile(String inputPath, String outputPath) {
         String result = null;
@@ -39,9 +27,7 @@ public class MailParser {
             fileWriter.write(result);
             fileWriter.close();
         } catch (IOException e) {
-            System.out.printf("Error happened. Message: %s, StackTrace: %s",
-                    e.getMessage(),
-                    Arrays.toString(e.getStackTrace()));
+
         }
         return result;
     }

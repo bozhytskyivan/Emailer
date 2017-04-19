@@ -15,11 +15,17 @@
         </rollingPolicy>
 
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <MaxFileSize>2MB</MaxFileSize>
+            <MaxFileSize>3MB</MaxFileSize>
         </triggeringPolicy>
     </appender>
 
     <logger name="com.covain.projects.emailer" level="INFO">
+        <appender-ref ref="EMAILER"/>
+    </logger>
+    <logger name="com.covain.projects.emailer" level="DEBUG">
+        <appender-ref ref="EMAILER"/>
+    </logger>
+    <logger name="com.covain.projects.emailer" level="WARN">
         <appender-ref ref="EMAILER"/>
     </logger>
 </configuration>

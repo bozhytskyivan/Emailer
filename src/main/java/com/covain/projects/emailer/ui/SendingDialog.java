@@ -1,5 +1,6 @@
 package com.covain.projects.emailer.ui;
 
+import com.covain.projects.emailer.exception.NoSuchRecipientsException;
 import com.covain.projects.emailer.pojo.Message;
 import com.covain.projects.emailer.ssl.SendMessageService;
 import com.covain.projects.emailer.ui.config.LocalizationKeys;
@@ -111,6 +112,13 @@ public class SendingDialog extends AbstractDialog {
             int counter = 0;
             int recipientsCount = message.getRecipients().size();
 
+            if (recipientsCount == 0) {
+                ExceptionDialog.createNew(owner, Localizer.getString(LocalizationKeys.NO_SUCH_RECIPIENTS_MESSAGE)).display();
+                LOGGER.error(Localizer.getString(LocalizationKeys.NO_SUCH_RECIPIENTS_MESSAGE));
+                dispose();
+                return;
+            }
+
             while (recipientsIterator.hasNext() && continueSending) {
                 String recipient = recipientsIterator.next();
                 LOGGER.info("Sending message to: {}", recipient);
@@ -122,7 +130,6 @@ public class SendingDialog extends AbstractDialog {
                     recipientsIterator.remove();
                     mSenderListener.onMessageSent(getRecipientsString(message.getRecipients()), recipient);
                 } catch (MessagingException e) {
-                    e.printStackTrace();
                     mSenderListener.onSendingFailed(getRecipientsString(message.getRecipients()), e);
                     dispose();
                     return;

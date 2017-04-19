@@ -30,6 +30,7 @@ public class LoginForm extends JFrame {
         setLocationRelativeTo(null);
         setLayout(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setAlwaysOnTop(true);
 
         JLabel email = new JLabel(Localizer.getString(LocalizationKeys.EMAIL));
         email.setFont(BOLD);
@@ -62,14 +63,16 @@ public class LoginForm extends JFrame {
             if (passwordTextField.getPassword().length == 0) {
                 message = Localizer.getString(LocalizationKeys.EMPTY_PASSWORD_MESSAGE);
             }
-            if (message == null && !isUserDataEnteredCorrectly(emailTextField.getText(), String.valueOf(passwordTextField.getPassword()))) {
+            /*if (message == null && !isUserDataEnteredCorrectly(emailTextField.getText(), String.valueOf(passwordTextField.getPassword()))) {
                 message = Localizer.getString(LocalizationKeys.WRONG_EMAIL_OR_PASS_MESSAGE);
-            }
+            }*/
             if (message != null) {
-                showExceptionDialog(message);
+                ExceptionDialog
+                        .createNew(this, message)
+                        .display();
                 return;
             }
-            new MainFor(this).setVisible(true);
+            new MainForm();
             setVisible(false);
         });
 
@@ -78,13 +81,6 @@ public class LoginForm extends JFrame {
         add(emailTextField);
         add(passwordTextField);
         add(loginButton);
-
-    }
-
-    private void showExceptionDialog(String message) {
-        ExceptionDialog
-                .createNew(this, message)
-                .display();
 
     }
 
