@@ -1,14 +1,12 @@
 package com.covain.projects.emailer.ui;
 
-import com.covain.projects.emailer.exception.NoSuchRecipientsException;
 import com.covain.projects.emailer.pojo.Message;
 import com.covain.projects.emailer.ssl.SendMessageService;
 import com.covain.projects.emailer.ui.config.LocalizationKeys;
 import com.covain.projects.emailer.utils.Localizer;
 
-import javax.mail.MessagingException;
 import javax.swing.*;
-import java.awt.event.WindowEvent;
+import java.awt.*;
 import java.util.Iterator;
 import java.util.List;
 
@@ -23,6 +21,13 @@ public class SendingDialog extends AbstractDialog {
     private SenderListener mSenderListener;
     private boolean continueSending;
 
+    private static final int MESSAGE_HEIGHT = 30;
+    private static final int MESSAGE_Y = 35;
+    private static final int MARGIN = 5;
+
+    private static int WINDOW_WIDTH = 380;
+    private static int WINDOW_HEIGHT = 180;
+
     public SendingDialog(JFrame owner) {
         super(owner, Localizer.getString(LocalizationKeys.SENDING_TITLE));
         this.owner = owner;
@@ -34,7 +39,7 @@ public class SendingDialog extends AbstractDialog {
 
     private void init() {
         addWindowListener(this);
-        setSize(380, 180);
+        setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setResizable(false);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(null);
@@ -42,10 +47,10 @@ public class SendingDialog extends AbstractDialog {
 
         messageLabel = new JLabel();
         messageLabel.setFont(BOLD);
-        messageLabel.setBounds(100, 35, 210, 30);
+        messageLabel.setBounds(100, MESSAGE_Y, 210, MESSAGE_HEIGHT);
 
         cancelButton = new JButton(Localizer.getString(LocalizationKeys.CANCEL));
-        cancelButton.setBounds(85, 100, 230, 30);
+        cancelButton.setBounds(85, MESSAGE_Y + 65, 230, MESSAGE_HEIGHT);
         cancelButton.addActionListener(actionEvent -> {
             System.out.println("canceling sending");
             stop();
@@ -72,26 +77,6 @@ public class SendingDialog extends AbstractDialog {
         }
     }
 
-    @Override
-    public void windowOpened(WindowEvent e) {
-    }
-
-    @Override
-    public void windowClosing(WindowEvent e) {
-        enableOwner();
-    }
-
-    @Override
-    public void windowClosed(WindowEvent e) {
-        enableOwner();
-    }
-
-    private void enableOwner() {
-        if (!owner.isEnabled()) {
-            owner.setEnabled(true);
-        }
-
-    }
 
     class Sender extends Thread {
 
@@ -126,12 +111,13 @@ public class SendingDialog extends AbstractDialog {
                 try {
                     counter++;
                     messageLabel.setText(String.format(Localizer.getString(LocalizationKeys.SENDING_MESSAGE), counter, recipientsCount));
+                    updateMessageLabelLength(messageLabel);
                     SendMessageService.getService().send(message.getSubject(), message.getBody(), recipient, message.getAttachments());
                     recipientsIterator.remove();
                     mSenderListener.onMessageSent(getRecipientsString(message.getRecipients()), recipient);
-                } catch (MessagingException e) {
+                } catch (Exception e) {
                     mSenderListener.onSendingFailed(getRecipientsString(message.getRecipients()), e);
-                    dispose();
+                    continueSending = false;
                     return;
                 }
 
@@ -153,6 +139,22 @@ public class SendingDialog extends AbstractDialog {
             dispose();
         }
 
+    }
+
+    private void updateMessageLabelLength(JLabel messageLabel) {
+        Rectangle bounds = messageLabel.getBounds();
+        if (messageLabel.getBounds() != null) {
+            int fontSize = messageLabel.getFont().getSize();
+            int messageWidth = fontSize * messageLabel.getText().length() / 2 + fontSize;
+            if (WINDOW_WIDTH < (messageWidth + 2 * MARGIN)) {
+                WINDOW_WIDTH = messageWidth + 2 * MARGIN;
+                setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+            }
+            int left = (WINDOW_WIDTH - messageWidth) / 2;
+
+            bounds.setSize(messageWidth, MESSAGE_HEIGHT);
+            messageLabel.setBounds(left, MESSAGE_Y, messageWidth, MESSAGE_HEIGHT);
+        }
     }
 
     private String getRecipientsString(List<String> input) {

@@ -63,9 +63,9 @@ public class LoginForm extends JFrame {
             if (passwordTextField.getPassword().length == 0) {
                 message = Localizer.getString(LocalizationKeys.EMPTY_PASSWORD_MESSAGE);
             }
-            /*if (message == null && !isUserDataEnteredCorrectly(emailTextField.getText(), String.valueOf(passwordTextField.getPassword()))) {
+            if (message == null && !isUserDataEnteredCorrectly(emailTextField.getText(), String.valueOf(passwordTextField.getPassword()))) {
                 message = Localizer.getString(LocalizationKeys.WRONG_EMAIL_OR_PASS_MESSAGE);
-            }*/
+            }
             if (message != null) {
                 ExceptionDialog
                         .createNew(this, message)

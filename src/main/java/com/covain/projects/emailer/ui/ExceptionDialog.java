@@ -52,25 +52,6 @@ public class ExceptionDialog extends AbstractDialog {
         add(okButton);
     }
 
-    @Override
-    public void windowOpened(WindowEvent e) {
-        owner.setEnabled(false);
-    }
-
-    @Override
-    public void windowClosing(WindowEvent e) {
-        if (!owner.isEnabled()) {
-            owner.setEnabled(true);
-        }
-    }
-
-    @Override
-    public void windowClosed(WindowEvent e) {
-        if (!owner.isEnabled()) {
-            owner.setEnabled(true);
-        }
-    }
-
     public void display() {
         setVisible(true);
     }
